@@ -31,7 +31,17 @@ MVP приложение для отслеживания личных рекор
 
 ### Backend
 
-```bash
+bash
 cd backend
 npm install
 node server.js
+
+Backend запустится на http://localhost:3001
+
+Frontend
+bash
+cd frontend
+npm install
+npm start
+
+Frontend откроется на http://localhost:3000
