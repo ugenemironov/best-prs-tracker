@@ -5,22 +5,44 @@ import './Onboarding.css';
 function Onboarding({ user, onComplete }) {
   const [name, setName] = useState('');
   const [unitSystem, setUnitSystem] = useState('kg');
-  const [timezone, setTimezone] = useState('UTC');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (name.trim().length < 2) {
+      setError('Name must be at least 2 characters');
+      return;
+    }
+
     setError('');
     setLoading(true);
 
+    console.log('Updating profile:', { name, unit_system: unitSystem });
+
     try {
-      await updateProfile({ name, unit_system: unitSystem, timezone });
-      const updatedUser = { ...user, name, unit_system: unitSystem, timezone };
+      await updateProfile({ 
+        name: name.trim(), 
+        unit_system: unitSystem,
+        timezone: 'UTC'
+      });
+      
+      const updatedUser = { 
+        ...user, 
+        name: name.trim(), 
+        unit_system: unitSystem,
+        timezone: 'UTC',
+        needs_onboarding: false
+      };
+      
       localStorage.setItem('user', JSON.stringify(updatedUser));
+      console.log('Profile updated successfully!');
       onComplete(updatedUser);
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to update profile');
+      console.error('Update profile error:', err);
+      console.error('Error details:', err.response?.data);
+      setError('Failed to update profile. Please try again.');
       setLoading(false);
     }
   };
@@ -43,6 +65,8 @@ function Onboarding({ user, onComplete }) {
               placeholder="John Doe"
               required
               disabled={loading}
+              minLength="2"
+              autoFocus
             />
           </div>
 
@@ -72,25 +96,7 @@ function Onboarding({ user, onComplete }) {
             </div>
           </div>
 
-          <div className="form-group">
-            <label>Timezone</label>
-            <select
-              value={timezone}
-              onChange={(e) => setTimezone(e.target.value)}
-              disabled={loading}
-            >
-              <option value="Europe/Moscow">Moscow</option>
-              <option value="America/New_York">Eastern Time</option>
-              <option value="America/Chicago">Central Time</option>
-              <option value="America/Denver">Mountain Time</option>
-              <option value="America/Los_Angeles">Pacific Time</option>
-              <option value="Europe/London">London</option>
-              <option value="Europe/Paris">Paris</option>
-              <option value="Asia/Tokyo">Tokyo</option>
-            </select>
-          </div>
-
-          <button type="submit" disabled={loading}>
+          <button type="submit" disabled={loading || name.trim().length < 2}>
             {loading ? 'Saving...' : 'Get Started'}
           </button>
         </form>
