@@ -57,28 +57,40 @@ app.post('/api/auth/verify-otp', (req, res) => {
   try {
     const { email, phone, code } = req.body;
 
+    console.log('🔐 Verifying OTP:', { email, phone, code });
+
     if (!verifyOTP(email || null, phone || null, code)) {
+      console.error('❌ Invalid OTP');
       return res.status(400).json({ error: 'Invalid or expired code' });
     }
+
+    console.log('✅ OTP verified, checking if user exists...');
 
     // Проверяем, существует ли пользователь
     let user = db.prepare('SELECT * FROM users WHERE email = ? OR phone = ?')
       .get(email || null, phone || null);
 
     if (!user) {
-      // Новый пользователь - создаём с временными данными
+      console.log('👤 New user, creating...');
+      
       const result = db.prepare(`
         INSERT INTO users (email, phone, name, last_login)
         VALUES (?, ?, ?, datetime('now'))
       `).run(email || null, phone || null, 'New User');
 
+      console.log('✅ User created with ID:', result.lastInsertRowid);
+
       user = db.prepare('SELECT * FROM users WHERE id = ?').get(result.lastInsertRowid);
+      console.log('✅ Fetched new user:', user);
     } else {
+      console.log('✅ Existing user found:', user.id);
+      
       // Обновляем last_login
       db.prepare('UPDATE users SET last_login = datetime(\'now\') WHERE id = ?').run(user.id);
     }
 
     const token = createToken(user.id);
+    console.log('🎫 Token created for user:', user.id);
 
     res.json({
       token,
@@ -97,6 +109,7 @@ app.post('/api/auth/verify-otp', (req, res) => {
     res.status(500).json({ error: 'Verification failed' });
   }
 });
+
 
 // ==================== USER ROUTES ====================
 
