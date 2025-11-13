@@ -81,7 +81,6 @@ export function authenticateToken(req, res, next) {
     
     if (!user) {
       console.error('❌ User not found for ID:', decoded.userId);
-      console.log('Available users:', users); // Для дебага
       return res.status(403).json({ error: 'User not found' });
     }
 
@@ -93,6 +92,7 @@ export function authenticateToken(req, res, next) {
     return res.status(403).json({ error: 'Invalid token' });
   }
 }
+
 
 
 export function checkOTPRateLimit(email, phone) {
